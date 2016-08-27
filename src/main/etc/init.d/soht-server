@@ -1,0 +1,132 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          soht-server
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Should-Start:      $named
+# Should-Stop:       $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start SOHT server.
+# Description:       Starts the Socket over HTTP Tunneling Server.
+### END INIT INFO
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+DESC="SOHT server"
+NAME=soht-server
+
+
+if [ `id -u` -ne 0 ]; then
+	echo "You need root privileges to run this script"
+	exit 1
+fi
+
+. /lib/lsb/init-functions
+
+if [ -r /etc/default/rcS ]; then
+	. /etc/default/rcS
+fi
+
+
+# run the application as this user & group
+USER=soht
+GROUP=soht
+
+HOME="/opt/$NAME"
+JAR="$NAME.jar"
+
+# PID file
+PIDFILE="/var/run/$NAME.pid"
+
+# java runtime
+JAVA=/usr/bin/java
+
+# java options
+JAVA_OPTS="-server -Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"
+
+# To enable remote debugging uncomment the following line.
+# You will then be able to use a java debugger on port 8000.
+#DEBUG#JAVA_OPTS="${JAVA_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
+
+# Enable monitoring and management
+#DEBUG#JAVA_OPTS="${JAVA_OPTS} -Djava.rmi.server.hostname=`hostname --fqdn` \
+#DEBUG#                        -Djava.rmi.server.useLocalHostname=true \
+#DEBUG#                        -Dcom.sun.management.jmxremote.port=8001 \
+#DEBUG#                        -Dcom.sun.management.jmxremote.rmi.port=8002 \
+#DEBUG#                        -Dcom.sun.management.jmxremote.local.only=false \
+#DEBUG#                        -Dcom.sun.management.jmxremote.ssl=false \
+#DEBUG#                        -Dcom.sun.management.jmxremote.authenticate=false"
+
+# Enable serialization debugging
+#DEBUG#JAVA_OPTS="${JAVA_OPTS} -Dsun.io.serialization.extendedDebugInfo=true"
+
+# build the command line to execute
+JAVA_CMD="$JAVA $JAVA_OPTS"
+JAVA_CMD="$JAVA_CMD -jar $HOME/bin/$JAR"
+
+do_start()
+{
+	# Return
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+
+	start-stop-daemon --start --quiet --test \
+		--user "$USER" \
+		--pidfile "$PIDFILE" \
+		--exec $JAVA > /dev/null \
+		|| return 1
+
+	start-stop-daemon --start --quiet --background \
+		--user "$USER" \
+		--chuid "$USER" \
+		--group "$GROUP" \
+		--pidfile "$PIDFILE" --make-pidfile \
+		--exec $JAVA --startas "/bin/bash" -- -c "$JAVA_CMD" \
+		|| return 2
+}
+
+do_stop()
+{
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+    #   other if a failure occurred
+
+	start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 \
+		--user "$USER" \
+		--pidfile $PIDFILE --exec $JAVA 
+	RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+
+	# Remove pidfiles.
+	rm -f $PIDFILE
+
+	return "$RETVAL"
+}
+
+case "$1" in
+	start)
+		log_daemon_msg "Starting $DESC" "$NAME"
+		do_start
+		case "$?" in
+			0|1) log_end_msg 0 ;;
+			2) log_end_msg 1 ;;
+		esac
+		;;
+	stop)
+		log_daemon_msg "Stopping $DESC" "$NAME"
+		do_stop
+		case "$?" in
+			0|1) log_end_msg 0 ;;
+			2) log_end_msg 1 ;;
+		esac
+		;;
+	*)
+		echo "Usage: $0 {start|stop}"
+		exit 3
+		;;
+esac
+
