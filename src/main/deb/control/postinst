@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if [ -x "/etc/init.d/[[service.name]]" ]; then
+  update-rc.d [[service.name]] defaults 92 08 > /dev/null
+  invoke-rc.d [[service.name]] start || true
+fi

@@ -1,0 +1,4 @@
+check process sohtserver with pidfile /var/run/sohtserver.pid
+    start program = "/etc/init.d/sohtserver start"
+    stop  program = "/etc/init.d/sohtserver stop"
+    group sohtserver

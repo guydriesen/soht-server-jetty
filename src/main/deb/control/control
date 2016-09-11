@@ -1,0 +1,9 @@
+Package: [[service.name]]
+Version: [[version]]
+Section: misc
+Priority: low
+Architecture: all
+Description: [[description]]
+Maintainer: guydriesen@users.noreply.github.com
+Depends: default-jre-headless (>= 1.7)
+Recommends: monit

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if ! getent group "[[service.group]]" > /dev/null 2>&1 ; then
+  addgroup --system "[[service.group]]" --quiet
+fi
+if ! id [[service.user]] > /dev/null 2>&1 ; then
+  adduser --system --home /var/run/[[service.user]] \
+    --ingroup "[[service.group]]" --disabled-password \
+    --shell /bin/false "[[service.user]]"
+fi

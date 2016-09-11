@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ -x "/etc/init.d/[[service.name]]" ]; then
+  invoke-rc.d [[service.name]] stop || true
+  update-rc.d [[service.name]] remove > /dev/null
+fi
+
+# In case this system is running systemd, we make systemd reload the unit files
+# to pick up changes.
+if [ -d /run/systemd/system ] ; then
+	systemctl --system daemon-reload >/dev/null || true
+fi

@@ -5,16 +5,31 @@
   <formats>
     <format>tar.gz</format>
   </formats>
-  <baseDirectory>soht-server</baseDirectory>
+  <baseDirectory>${service.name}</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
 
   <fileSets>
     <fileSet>
       <directory>${basedir}/src/main/etc</directory>
+      <filtered>true</filtered>
       <outputDirectory>etc</outputDirectory>
       <lineEnding>unix</lineEnding>
+      <excludes>
+        <exclude>**/init.d/**</exclude>
+      </excludes>
+      <fileMode>0664</fileMode>
+      <directoryMode>2775</directoryMode>
+    </fileSet>
+    <fileSet>
+      <directory>${basedir}/src/main/etc</directory>
+      <filtered>true</filtered>
+      <outputDirectory>etc</outputDirectory>
+      <lineEnding>unix</lineEnding>
+      <includes>
+        <include>**/init.d/**</include>
+      </includes>
       <fileMode>0775</fileMode>
-      <directoryMode>0775</directoryMode>
+      <directoryMode>2775</directoryMode>
     </fileSet>
     <!-- Create the directory structure -->
     <fileSet>
@@ -22,17 +37,17 @@
       <excludes>
         <exclude>*/**</exclude>
       </excludes>
-      <outputDirectory>bin</outputDirectory>
-      <directoryMode>0775</directoryMode>
+      <outputDirectory>usr/share/java</outputDirectory>
+      <directoryMode>2775</directoryMode>
     </fileSet>
   </fileSets>
 
   <files>
     <!-- Get the jar -->
     <file>
-      <source>${basedir}/target/${project.artifactId}-${project.version}.jar</source>
-      <destName>soht-server.jar</destName>
-      <outputDirectory>bin</outputDirectory>
+      <source>${basedir}/target/${service.name}_${project.version}.jar</source>
+      <destName>${service.name}.jar</destName>
+      <outputDirectory>usr/share/java</outputDirectory>
       <fileMode>0555</fileMode>
     </file>
   </files>

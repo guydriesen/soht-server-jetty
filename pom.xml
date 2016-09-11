@@ -23,7 +23,11 @@
   <properties>
     <main.basedir>${project.basedir}/..</main.basedir>
     <java.version>1.7</java.version> <!-- jetty 9.2 minimum req -->
-    <jetty.version>9.2.8.v20150217</jetty.version>
+    <jetty.version>9.2.18.v20160721</jetty.version>
+
+    <service.name>sohtserver</service.name>
+    <service.user>soht</service.user>
+    <service.group>soht</service.group>
   </properties>
 
   <build>
@@ -55,7 +59,7 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- to create a .jar that contains all dependencies -->
+        <!-- create a .jar that contains all dependencies -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
@@ -65,6 +69,7 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <finalName>${service.name}_${version}</finalName>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>soht.server.jetty.SohtServer</mainClass>
@@ -81,6 +86,7 @@
         </executions>
       </plugin>
       <plugin>
+        <!-- create a tarball -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
@@ -91,9 +97,76 @@
               <goal>single</goal>
             </goals>
             <configuration>
+              <finalName>${service.name}_${version}</finalName>
               <descriptors>
                 <descriptor>src/main/assembly/distribution.xml</descriptor>
               </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- build a debian package from the tarball -->
+        <groupId>org.vafer</groupId>
+        <artifactId>jdeb</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jdeb</goal>
+            </goals>
+            <configuration>
+              <verbose>true</verbose>
+              <deb>[[buildDir]]/[[service.name]]_[[version]]_all.deb</deb>
+              <changesOut>[[buildDir]]/[[service.name]]_[[version]]_all.changes</changesOut>
+              <snapshotExpand>true</snapshotExpand> <!-- change "SNAPSHOT" into a timestamp -->
+              <controlDir>${basedir}/src/main/deb/control</controlDir>
+              <dataSet>
+                <data>
+                  <src>${project.build.directory}/${service.name}_${version}-distribution.tar.gz</src>
+                  <type>archive</type>
+                  <includes>
+                    **/etc/default/sohtserver,
+                    **/etc/monit/conf.d/sohtserver.monitrc,
+                    **/etc/sohtserver/soht.properties
+                  </includes>
+                  <conffile>true</conffile>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/</prefix>
+                    <strip>1</strip>
+                    <user>${service.user}</user>
+                    <group>${service.group}</group>
+                  </mapper>
+                </data>
+                <data>
+                  <src>${project.build.directory}/${service.name}_${version}-distribution.tar.gz</src>
+                  <type>archive</type>
+                  <excludes>
+                    **/etc/default/sohtserver,
+                    **/etc/monit/conf.d/sohtserver.monitrc,
+                    **/etc/sohtserver/soht.properties
+                  </excludes>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/</prefix>
+                    <strip>1</strip>
+                    <user>${service.user}</user>
+                    <group>${service.group}</group>
+                  </mapper>
+                </data>
+                <data>
+                  <type>template</type>
+                  <paths>
+                    <path>var/log/${service.name}</path>
+                  </paths>
+                  <mapper>
+                    <type>perm</type>
+                    <user>${service.user}</user>
+                    <group>${service.group}</group>
+                  </mapper>
+                </data>
+              </dataSet>
             </configuration>
           </execution>
         </executions>

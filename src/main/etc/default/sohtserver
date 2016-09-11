@@ -1,0 +1,37 @@
+# /etc/default/sohtserver
+
+# Defaults for sohtserver initscript.  This file is sourced by
+# /bin/sh from /etc/init.d/sohtserver.
+
+# set host to the ip or hostname of the NIC to listen to
+#   or set to ALL to listen to all NICs
+HOST=`ip -4 -o addr show dev eth0 2> /dev/null | awk -F'[/ ]+' '{print $4}'`
+
+# set port to the port number to listen to
+PORT=8080
+
+# run the application as this user & group
+USER=${service.user}
+GROUP=${service.group}
+
+# java options
+JAVA_OPTS="-server -Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC"
+
+# soht properties file
+JAVA_OPTS="${JAVA_OPTS} -Dsoht.properties=/etc/sohtserver/soht.properties"
+
+# To enable remote debugging uncomment the following line.
+# You will then be able to use a java debugger on port 8000.
+#DEBUG#JAVA_OPTS="${JAVA_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
+
+# Enable monitoring and management
+#DEBUG#JAVA_OPTS="${JAVA_OPTS} -Djava.rmi.server.hostname=`hostname --fqdn` \
+#DEBUG#                        -Djava.rmi.server.useLocalHostname=true \
+#DEBUG#                        -Dcom.sun.management.jmxremote.port=8001 \
+#DEBUG#                        -Dcom.sun.management.jmxremote.rmi.port=8002 \
+#DEBUG#                        -Dcom.sun.management.jmxremote.local.only=false \
+#DEBUG#                        -Dcom.sun.management.jmxremote.ssl=false \
+#DEBUG#                        -Dcom.sun.management.jmxremote.authenticate=false"
+
+# Enable serialization debugging
+#DEBUG#JAVA_OPTS="${JAVA_OPTS} -Dsun.io.serialization.extendedDebugInfo=true"
