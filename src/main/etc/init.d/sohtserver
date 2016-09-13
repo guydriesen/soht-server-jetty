@@ -43,7 +43,9 @@ JAR="/usr/share/java/$NAME.jar"
 # build the command line to execute
 JAVA_CMD="$JAVA $JAVA_OPTS"
 JAVA_CMD="$JAVA_CMD -jar $JAR"
-JAVA_CMD="$JAVA_CMD $HOST:$PORT"
+JAVA_CMD="$JAVA_CMD --listen-addess $LISTEN"
+JAVA_CMD="$JAVA_CMD --port $PORT"
+JAVA_CMD="$JAVA_CMD --deploy-path $DEPLOY"
 
 
 do_start()
